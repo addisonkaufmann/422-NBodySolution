@@ -28,15 +28,31 @@ public class NBodySequential {
 	}
 
 	public void calculateForces(){
-		double distance, magnitude;
-		Point direction;
+		double dist, mag, newforcex, newforcey;
+		Point dir;
 		Body body1, body2;
 		Point pos1, pos2;
+		Point force1, force2;
 		
 		for (int i = 0; i < numBodies-1; i++){
 			body1 = oldbodies.get(i);
 			body2 = oldbodies.get(i+1);
+			
 			pos1 = body1.getPos();
+			pos2 = body2.getPos();
+			
+			force1 = body1.getForce();
+			force2 = body2.getForce();
+			
+			dist = pos1.distance(pos2);
+			mag = (G*mass*mass)/ (dist*dist);
+			dir = new Point(pos2.x - pos1.x, pos2.y - pos1.y);
+			
+			newforcex = (mag*dir.x)/dist;
+			newforcey = (mag*dir.y)/dist;
+			
+			body1.setForce(force1.x + newforcex, force1.y + newforcey);
+			body2.setForce(force2.x - newforcex, force2.y - newforcey);
 			
 		}
 		
