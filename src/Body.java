@@ -8,13 +8,12 @@ import java.awt.Point;
  */
 public class Body {
 	private Point pos, vel, force;
-	private double mass, diameter;
+	private double diameter;
 	
-	public Body(Point pos, Point vel, Point force, double mass, double diameter) {
+	public Body(Point pos, Point vel, Point force, double diameter) {
 		this.setPos(pos);
 		this.setVel(vel);
 		this.setForce(force);
-		this.setMass(mass);
 		this.diameter = diameter;
 	}
 
@@ -40,14 +39,6 @@ public class Body {
 
 	public void setForce(Point force) {
 		this.force = force;
-	}
-
-	public double getMass() {
-		return mass;
-	}
-
-	public void setMass(double mass) {
-		this.mass = mass;
 	}
 
 	public double getDiameter() {
