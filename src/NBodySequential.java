@@ -1,4 +1,5 @@
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 public class NBodySequential {
@@ -28,11 +29,11 @@ public class NBodySequential {
 	}
 
 	public void calculateForces(){
-		double dist, mag, newforcex, newforcey;
-		Point dir;
+		double dist, mag;
+		Point2D dir, newforce;
 		Body body1, body2;
-		Point pos1, pos2;
-		Point force1, force2;
+		Point2D pos1, pos2;
+		Point2D force1, force2;
 		
 		for (int i = 0; i < numBodies-1; i++){
 			body1 = oldbodies.get(i);
@@ -46,13 +47,12 @@ public class NBodySequential {
 			
 			dist = pos1.distance(pos2);
 			mag = (G*mass*mass)/ (dist*dist);
-			dir = new Point(pos2.x - pos1.x, pos2.y - pos1.y);
 			
-			newforcex = (mag*dir.x)/dist;
-			newforcey = (mag*dir.y)/dist;
+			dir = new Point2D.Double(pos2.getX() - pos1.getX(), pos2.getY() - pos1.getY());
+			newforce = new Point2D.Double((mag*dir.getX())/dist, (mag*dir.getY())/dist);
 			
-			body1.setForce(force1.x + newforcex, force1.y + newforcey);
-			body2.setForce(force2.x - newforcex, force2.y - newforcey);
+			body1.setForce(force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
+			body2.setForce(force2.getX() - newforce.getX(), force2.getY() - newforce.getY());
 			
 		}
 		
@@ -66,8 +66,8 @@ public class NBodySequential {
 		StdDraw.setXscale(-(width/2),(width/2)); 
         StdDraw.setYscale(-(height/2), (height/2));
 		for (Body body : newbodies) {
-			Point pos = body.getPos();
-			StdDraw.filledCircle(pos.x, pos.y, body.getDiameter()/2);
+			Point2D pos = body.getPos();
+			StdDraw.filledCircle(pos.getX(), pos.getY(), body.getRadius());
 		}
 		StdDraw.show();
 	}

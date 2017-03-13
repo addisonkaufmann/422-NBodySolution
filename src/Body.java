@@ -23,7 +23,7 @@ public class Body {
 	}
 
 	public void setPos(double x, double y) {
-		this.pos = new Point2D.Double(x, y);
+		this.pos.setLocation(x, y);
 	}
 
 	public Point2D getVel() {
@@ -31,7 +31,7 @@ public class Body {
 	}
 
 	public void setVel(double x, double y) {
-		this.vel = new Point2D.Double(x, y);
+		this.vel.setLocation(x, y);
 		
 	}
 
@@ -40,7 +40,7 @@ public class Body {
 	}
 
 	public void setForce(double x, double y) {
-		this.force = new Point2D.Double(x, y);
+		this.force.setLocation(x, y);
 	}
 
 	public double getRadius() {
