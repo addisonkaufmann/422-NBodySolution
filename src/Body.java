@@ -11,9 +11,9 @@ public class Body {
 	private double diameter;
 	
 	public Body(Point pos, Point vel, Point force, double diameter) {
-		this.setPos(pos);
-		this.setVel(vel);
-		this.setForce(force);
+		this.pos = pos;
+		this.vel = vel;
+		this.force = force;
 		this.diameter = diameter;
 	}
 
@@ -21,24 +21,24 @@ public class Body {
 		return pos;
 	}
 
-	public void setPos(Point pos) {
-		this.pos = pos;
+	public void setPos(int x, int y) {
+		this.pos = new Point(x,y);
 	}
 
 	public Point getVel() {
 		return vel;
 	}
 
-	public void setVel(Point vel) {
-		this.vel = vel;
+	public void setVel(int x, int y) {
+		this.vel = new Point(x,y);
 	}
 
 	public Point getForce() {
 		return force;
 	}
 
-	public void setForce(Point force) {
-		this.force = force;
+	public void setForce(int x, int y) {
+		this.force = new Point(x,y);
 	}
 
 	public double getDiameter() {
