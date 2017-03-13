@@ -7,25 +7,41 @@ public class NBodySequential {
 	public final int mass = 5;
 	private int numBodies;
 	private int bodyRadius;
-	private int numSteps;
 	private ArrayList<Body> oldbodies;
 	private ArrayList<Body> newbodies;
-	private final int height = 250, width = 250;
+	private final int dimension = 600;
 	
-	public void main (String [] args){
+	public static void main (String [] arg){
+		String [] args = {"0", "10", "5", "6"};
 		if (args.length < 4){
 			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
 		}
 		
-		//int numWorkers = Integer.parseInt(args[0]);
-		numBodies = Integer.parseInt(args[1]);
-		bodyRadius = Integer.parseInt(args[2]);
-		numSteps = Integer.parseInt(args[3]);
+		int numBodies = Integer.parseInt(args[1]);
+		int bodyRadius = Integer.parseInt(args[2]);
+		int numSteps = Integer.parseInt(args[3]);
 		
+		NBodySequential n = new NBodySequential(numBodies, bodyRadius);
+		for (int i = 0 ; i < numSteps; i++){
+			//n.update();
+//			n.draw();
+		}
+
+	}
+	public NBodySequential(int numBodies, int bodyRadius){
+		this.numBodies = numBodies;
+		this.bodyRadius = bodyRadius;
 		oldbodies = new ArrayList<>();
+		newbodies = new ArrayList<>();
+		for (int i = 0; i < numBodies; i++){
+			Body b = new Body(dimension/2, bodyRadius);
+			oldbodies.add(b);
+			newbodies.add(b);
+		}
+		draw();
 		System.out.println("ehllo");
-		
+
 	}
 
 	public void calculateForces(){
@@ -62,9 +78,9 @@ public class NBodySequential {
 		StdDraw.clear(StdDraw.BLACK);
 		StdDraw.setPenColor(StdDraw.BOOK_BLUE);
 		
-		StdDraw.setCanvasSize(height, width);
-		StdDraw.setXscale(-(width/2),(width/2)); 
-        StdDraw.setYscale(-(height/2), (height/2));
+		StdDraw.setCanvasSize(dimension, dimension);
+		StdDraw.setXscale(-(dimension/2),(dimension/2)); 
+        StdDraw.setYscale(-(dimension/2), (dimension/2));
 		for (Body body : newbodies) {
 			Point2D pos = body.getPos();
 			StdDraw.filledCircle(pos.getX(), pos.getY(), body.getRadius());

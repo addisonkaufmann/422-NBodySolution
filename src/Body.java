@@ -1,5 +1,6 @@
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.util.Random;
 
 /**
  * This class represents a perfectly circular body that have properties such
@@ -11,7 +12,17 @@ public class Body {
 	private Point2D pos, vel, force;
 	private double radius;
 	
-	public Body(Point pos, Point vel, Point force, double radius) {
+	public Body(int bounds, int radius){
+		int max = bounds, min = -1*bounds;
+		Random randy = new Random();
+
+		this.pos = new Point2D.Double(min + (max - min) * randy.nextDouble(), min + (max - min) * randy.nextDouble());	
+		this.vel = new Point2D.Double(5.5, 5.5);
+		this.force = new Point2D.Double(5.5, 5.5);
+		this.radius = radius;
+	}
+	
+	public Body(Point2D pos, Point2D vel, Point2D force, double radius) {
 		this.pos = pos;
 		this.vel = vel;
 		this.force = force;
