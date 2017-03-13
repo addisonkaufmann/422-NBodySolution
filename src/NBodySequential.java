@@ -9,6 +9,7 @@ public class NBodySequential {
 	private int numSteps;
 	private ArrayList<Body> oldbodies;
 	private ArrayList<Body> newbodies;
+	private final int height = 250, width = 250;
 	
 	public void main (String [] args){
 		if (args.length < 4){
@@ -21,7 +22,7 @@ public class NBodySequential {
 		bodyRadius = Integer.parseInt(args[2]);
 		numSteps = Integer.parseInt(args[3]);
 		
-		bodies = new ArrayList<>();
+		oldbodies = new ArrayList<>();
 		System.out.println("ehllo");
 		
 	}
@@ -36,10 +37,23 @@ public class NBodySequential {
 			body1 = oldbodies.get(i);
 			body2 = oldbodies.get(i+1);
 			pos1 = body1.getPos();
-			distance = Math.sqrt( pos1.x 
 			
 		}
 		
+	}
+	
+	public void draw() {
+		StdDraw.clear(StdDraw.BLACK);
+		StdDraw.setPenColor(StdDraw.BOOK_BLUE);
+		
+		StdDraw.setCanvasSize(height, width);
+		StdDraw.setXscale(-(width/2),(width/2)); 
+        StdDraw.setYscale(-(height/2), (height/2));
+		for (Body body : newbodies) {
+			Point pos = body.getPos();
+			StdDraw.filledCircle(pos.x, pos.y, body.getDiameter()/2);
+		}
+		StdDraw.show();
 	}
 	
 }
