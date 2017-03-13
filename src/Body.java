@@ -1,4 +1,5 @@
 import java.awt.Point;
+import java.awt.geom.Point2D;
 
 /**
  * This class represents a perfectly circular body that have properties such
@@ -7,42 +8,43 @@ import java.awt.Point;
  *
  */
 public class Body {
-	private Point pos, vel, force;
-	private double diameter;
+	private Point2D pos, vel, force;
+	private double radius;
 	
-	public Body(Point pos, Point vel, Point force, double diameter) {
+	public Body(Point pos, Point vel, Point force, double radius) {
 		this.pos = pos;
 		this.vel = vel;
 		this.force = force;
-		this.diameter = diameter;
+		this.radius = radius;
 	}
 
-	public Point getPos() {
+	public Point2D getPos() {
 		return pos;
 	}
 
-	public void setPos(int x, int y) {
-		this.pos = new Point(x,y);
+	public void setPos(double x, double y) {
+		this.pos = new Point2D.Double(x, y);
 	}
 
-	public Point getVel() {
+	public Point2D getVel() {
 		return vel;
 	}
 
-	public void setVel(int x, int y) {
-		this.vel = new Point(x,y);
+	public void setVel(double x, double y) {
+		this.vel = new Point2D.Double(x, y);
+		
 	}
 
-	public Point getForce() {
+	public Point2D getForce() {
 		return force;
 	}
 
-	public void setForce(int x, int y) {
-		this.force = new Point(x,y);
+	public void setForce(double x, double y) {
+		this.force = new Point2D.Double(x, y);
 	}
 
-	public double getDiameter() {
-		return diameter;
+	public double getRadius() {
+		return radius;
 	}	
 
 }
