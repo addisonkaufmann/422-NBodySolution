@@ -13,12 +13,15 @@ public class Body {
 	private double radius;
 	
 	public Body(int bounds, int radius){
-		int max = bounds, min = -1*bounds;
+		int maxpos = bounds, minpos = -1*bounds;
+		int minvel = -7, maxvel = 7;
 		Random randy = new Random();
 
-		this.pos = new Point2D.Double(min + (max - min) * randy.nextDouble(), min + (max - min) * randy.nextDouble());	
-		this.vel = new Point2D.Double(5.5, 5.5);
-		this.force = new Point2D.Double(5.5, 5.5);
+		this.pos = new Point2D.Double(minpos + (maxpos - minpos) * randy.nextDouble(), minpos + (maxpos - minpos) * randy.nextDouble());	
+//		this.vel = new Point2D.Double(minvel + (maxvel - minvel) * randy.nextDouble(), minvel + (maxvel - minvel) * randy.nextDouble());		this.vel = new Point2D.Double(minvel + (maxvel - minvel) * randy.nextDouble(), minvel + (maxvel - minvel) * randy.nextDouble());
+		this.vel = new Point2D.Double(0.0, 0.0);
+
+		this.force = new Point2D.Double(0.0, 0.0);
 		this.radius = radius;
 	}
 	
@@ -57,5 +60,9 @@ public class Body {
 	public double getRadius() {
 		return radius;
 	}	
+	
+	public String toString(){
+		return "position = " + pos.toString() + "; velocity = " + vel.toString() + "; force = " + force.toString();
+	}
 
 }

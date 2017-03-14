@@ -4,7 +4,8 @@ import java.util.ArrayList;
 
 public class NBodySequential {
 	public final double G = 6.67 * Math.pow(10, -11);
-	public final int mass = 5;
+	public final int MASS = 10000000;
+	public final double DT = 500;
 	private int numBodies;
 	private int bodyRadius;
 	private ArrayList<Body> oldbodies;
@@ -12,7 +13,7 @@ public class NBodySequential {
 	private final int dimension = 600;
 	
 	public static void main (String [] arg){
-		String [] args = {"0", "10", "5", "6"};
+		String [] args = {"0", "10", "5", "500"};
 		if (args.length < 4){
 			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -21,15 +22,23 @@ public class NBodySequential {
 		int numBodies = Integer.parseInt(args[1]);
 		int bodyRadius = Integer.parseInt(args[2]);
 		int numSteps = Integer.parseInt(args[3]);
-		
 		NBodySequential n = new NBodySequential(numBodies, bodyRadius);
 		for (int i = 0 ; i < numSteps; i++){
-			//n.update();
-//			n.draw();
+			System.out.println(i);
+			//System.out.println(n.toString());
+
+			try{Thread.sleep(70);}catch(InterruptedException e){System.out.println(e);}  
+			n.calculateForces();
+			n.moveBodies();
+			n.draw();
+			
 		}
 
 	}
 	public NBodySequential(int numBodies, int bodyRadius){
+		StdDraw.setCanvasSize(dimension, dimension);
+		StdDraw.setXscale(-(dimension/2),(dimension/2)); 
+        StdDraw.setYscale(-(dimension/2), (dimension/2));
 		this.numBodies = numBodies;
 		this.bodyRadius = bodyRadius;
 		oldbodies = new ArrayList<>();
@@ -61,31 +70,57 @@ public class NBodySequential {
 			force1 = body1.getForce();
 			force2 = body2.getForce();
 			
-			dist = pos1.distance(pos2);
-			mag = (G*mass*mass)/ (dist*dist);
+			dist = pos1.distance(pos2); //not sure about this line pos1-pos2 or pos2-pos1
+			mag = (G*MASS*MASS)/ (dist*dist);
 			
 			dir = new Point2D.Double(pos2.getX() - pos1.getX(), pos2.getY() - pos1.getY());
 			newforce = new Point2D.Double((mag*dir.getX())/dist, (mag*dir.getY())/dist);
 			
-			body1.setForce(force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
-			body2.setForce(force2.getX() - newforce.getX(), force2.getY() - newforce.getY());
+			newbodies.get(i).setForce(force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
+			newbodies.get(i+1).setForce(force2.getX() - newforce.getX(), force2.getY() - newforce.getY());	
+		}	
+		oldbodies.clear();
+		oldbodies.addAll(newbodies);		
+	}
+	
+	public void moveBodies(){
+		Point2D dv, dp, force, velocity, position;
+		Body body;
+		
+		for (int i = 0; i < numBodies; i++){
+			body = oldbodies.get(i);
+			force = body.getForce();
+			velocity = body.getVel();
+			position = body.getPos();
+			dv = new Point2D.Double(force.getX()/MASS * DT, force.getY()/MASS * DT);
+			dp = new Point2D.Double(   (velocity.getX() + dv.getX()/2) * DT, 
+										(velocity.getY() + dv.getY()/2) * DT);
 			
+			body.setVel(velocity.getX() + dv.getX(), velocity.getY() + dv.getY());
+			body.setPos(position.getX() + dp.getX(), position.getY() + dp.getY());
+			body.setForce(0.0,  0.0);
 		}
 		
 	}
 	
 	public void draw() {
-		StdDraw.clear(StdDraw.BLACK);
+		StdDraw.clear();
 		StdDraw.setPenColor(StdDraw.BOOK_BLUE);
 		
-		StdDraw.setCanvasSize(dimension, dimension);
-		StdDraw.setXscale(-(dimension/2),(dimension/2)); 
-        StdDraw.setYscale(-(dimension/2), (dimension/2));
+
 		for (Body body : newbodies) {
 			Point2D pos = body.getPos();
 			StdDraw.filledCircle(pos.getX(), pos.getY(), body.getRadius());
 		}
 		StdDraw.show();
+	}
+	
+	public String toString(){
+		StringBuffer s = new StringBuffer("");
+		for (Body b: oldbodies){
+			s.append(b.toString() + "\n");
+		}
+		return s.toString();
 	}
 	
 }
