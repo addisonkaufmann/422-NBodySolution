@@ -67,7 +67,7 @@ public class Body {
 	}
 
 	public boolean collidedWith(Body that) {
-		return Math.abs(this.pos.distance(that.getPos())) <= radius;
+		return Math.abs(this.pos.distance(that.getPos())) <= radius*2;
 	}
 
 	public void calculateCollision(Body that) {

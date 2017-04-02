@@ -12,7 +12,7 @@ public class NBodySequential {
 	private final int dimension = 600;
 	
 	public static void main (String [] arg){
-		String [] args = {"0", "20", "10", "100"};
+		String [] args = {"0", "20", "10", "1000"};
 		if (args.length < 4){
 			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -25,8 +25,6 @@ public class NBodySequential {
 		for (int i = 0 ; i < numSteps; i++){
 			System.out.println(i);
 			//System.out.println(n.toString());
-
-			try{Thread.sleep(50);}catch(InterruptedException e){System.out.println(e);}  
 			n.calculateForces();
 			n.moveBodies();
 			n.draw();
@@ -107,23 +105,14 @@ public class NBodySequential {
 		adjustCollisions();	
 	}
 	
-//	v1fx = v2x * Math.pow(x2 - x1, 2);
-//	v1fx += v2y * (x2 - x1) * (y2 - y1);
-//	v1fx += v1x * Math.pow(y2 - y1, 2);
-//	v1fx -= v1y * (x2 - x1) * (y2 - y1);
-//	v1fx /= Math.pow(x2 - x1, 2) + Math.pow(y2 - y1,  2);
-	
 	public void adjustCollisions(){
 		for (int i = 0; i < numBodies-1; i++){
-//			System.out.print(i + ":  " );
 			for (int j = i + 1 ; j < numBodies; j++){
-//				System.out.print(j);
 				if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
 					newbodies.get(i).calculateCollision(newbodies.get(j));
 					System.out.println("collision between " + i + " and " + j);					
 				}
 			}
-//			System.out.println();
 		}
 		oldbodies.clear();
 		oldbodies.addAll(newbodies);
