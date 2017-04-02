@@ -14,12 +14,12 @@ public class Body {
 	
 	public Body(int bounds, int radius){
 		int maxpos = bounds, minpos = -1*bounds;
-		int minvel = -7, maxvel = 7;
+		int minvel = -1, maxvel = 1;
 		Random randy = new Random();
 
 		this.pos = new Point2D.Double(minpos + (maxpos - minpos) * randy.nextDouble(), minpos + (maxpos - minpos) * randy.nextDouble());	
-//		this.vel = new Point2D.Double(minvel + (maxvel - minvel) * randy.nextDouble(), minvel + (maxvel - minvel) * randy.nextDouble());		this.vel = new Point2D.Double(minvel + (maxvel - minvel) * randy.nextDouble(), minvel + (maxvel - minvel) * randy.nextDouble());
-		this.vel = new Point2D.Double(0.0, 0.0);
+		this.vel = new Point2D.Double(minvel + (maxvel - minvel) * randy.nextDouble(), minvel + (maxvel - minvel) * randy.nextDouble());
+		//this.vel = new Point2D.Double(0.0, 0.0);
 
 		this.force = new Point2D.Double(0.0, 0.0);
 		this.radius = radius;

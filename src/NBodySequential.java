@@ -1,11 +1,10 @@
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 public class NBodySequential {
 	public final double G = 6.67 * Math.pow(10, -11);
-	public final int MASS = 10000000;
-	public final double DT = 500;
+	public final int MASS = 100000;
+	public final double DT = 5;
 	private int numBodies;
 	private int bodyRadius;
 	private ArrayList<Body> oldbodies;
@@ -13,7 +12,7 @@ public class NBodySequential {
 	private final int dimension = 600;
 	
 	public static void main (String [] arg){
-		String [] args = {"0", "10", "5", "500"};
+		String [] args = {"0", "10", "10", "500"};
 		if (args.length < 4){
 			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -27,7 +26,7 @@ public class NBodySequential {
 			System.out.println(i);
 			//System.out.println(n.toString());
 
-			try{Thread.sleep(70);}catch(InterruptedException e){System.out.println(e);}  
+			try{Thread.sleep(50);}catch(InterruptedException e){System.out.println(e);}  
 			n.calculateForces();
 			n.moveBodies();
 			n.draw();
@@ -62,22 +61,26 @@ public class NBodySequential {
 		
 		for (int i = 0; i < numBodies-1; i++){
 			body1 = oldbodies.get(i);
-			body2 = oldbodies.get(i+1);
-			
-			pos1 = body1.getPos();
-			pos2 = body2.getPos();
-			
-			force1 = body1.getForce();
-			force2 = body2.getForce();
-			
-			dist = pos1.distance(pos2); //not sure about this line pos1-pos2 or pos2-pos1
-			mag = (G*MASS*MASS)/ (dist*dist);
-			
-			dir = new Point2D.Double(pos2.getX() - pos1.getX(), pos2.getY() - pos1.getY());
-			newforce = new Point2D.Double((mag*dir.getX())/dist, (mag*dir.getY())/dist);
-			
-			newbodies.get(i).setForce(force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
-			newbodies.get(i+1).setForce(force2.getX() - newforce.getX(), force2.getY() - newforce.getY());	
+			for (int j = i+1; j < numBodies; j++) {
+				body2 = oldbodies.get(j);
+				pos1 = body1.getPos();
+				pos2 = body2.getPos();
+				
+				force1 = body1.getForce();
+				force2 = body2.getForce();
+				
+				dist = pos1.distance(pos2); //not sure about this line pos1-pos2 or pos2-pos1
+				if (dist == 0) {
+					System.err.println("Divide by zero.");
+				}
+				mag = (G*MASS*MASS)/ (dist*dist);
+				
+				dir = new Point2D.Double(pos2.getX() - pos1.getX(), pos2.getY() - pos1.getY());
+				newforce = new Point2D.Double((mag*dir.getX())/dist, (mag*dir.getY())/dist);
+				
+				newbodies.get(i).setForce(force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
+				newbodies.get(j).setForce(force2.getX() - newforce.getX(), force2.getY() - newforce.getY());	
+			}
 		}	
 		oldbodies.clear();
 		oldbodies.addAll(newbodies);		
