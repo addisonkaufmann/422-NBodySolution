@@ -3,8 +3,8 @@ import java.util.ArrayList;
 
 public class NBodySequential {
 	public final double G = 6.67 * Math.pow(10, -11);
-	public final int MASS = 100000;
-	public final double DT = 5;
+	public final int MASS = 10000000;
+	public final double DT = 1;
 	private int numBodies;
 	private int bodyRadius;
 	private ArrayList<Body> oldbodies;
@@ -12,7 +12,7 @@ public class NBodySequential {
 	private final int dimension = 600;
 	
 	public static void main (String [] arg){
-		String [] args = {"0", "10", "10", "500"};
+		String [] args = {"0", "20", "10", "100"};
 		if (args.length < 4){
 			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -104,6 +104,29 @@ public class NBodySequential {
 			body.setForce(0.0,  0.0);
 		}
 		
+		adjustCollisions();	
+	}
+	
+//	v1fx = v2x * Math.pow(x2 - x1, 2);
+//	v1fx += v2y * (x2 - x1) * (y2 - y1);
+//	v1fx += v1x * Math.pow(y2 - y1, 2);
+//	v1fx -= v1y * (x2 - x1) * (y2 - y1);
+//	v1fx /= Math.pow(x2 - x1, 2) + Math.pow(y2 - y1,  2);
+	
+	public void adjustCollisions(){
+		for (int i = 0; i < numBodies-1; i++){
+//			System.out.print(i + ":  " );
+			for (int j = i + 1 ; j < numBodies; j++){
+//				System.out.print(j);
+				if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
+					newbodies.get(i).calculateCollision(newbodies.get(j));
+					System.out.println("collision between " + i + " and " + j);					
+				}
+			}
+//			System.out.println();
+		}
+		oldbodies.clear();
+		oldbodies.addAll(newbodies);
 	}
 	
 	public void draw() {
