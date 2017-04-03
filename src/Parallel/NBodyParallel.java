@@ -121,7 +121,7 @@ public class NBodyParallel implements Observer {
 				
 				dissemBarrier(id, semaphores, barrierStages, numWorkers);
 
-				if (id == 0) {
+				if (id == 0){
 					this.setChanged();
 					this.notifyObservers();
 				}
@@ -187,7 +187,7 @@ public class NBodyParallel implements Observer {
 				for (int j = i + 1 ; j < numBodies; j++){
 					if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
 						newbodies.get(i).calculateCollision(newbodies.get(j));
-						System.out.println("collision between " + i + " and " + j);					
+//						System.out.println("collision between " + i + " and " + j);					
 					}
 				}
 			}
