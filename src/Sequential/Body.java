@@ -1,3 +1,4 @@
+package Sequential;
 import java.awt.geom.Point2D;
 import java.util.Random;
 

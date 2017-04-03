@@ -1,5 +1,8 @@
+package Sequential;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+
+import Parallel.StdDraw;
 
 public class NBodySequential {
 	public final double G = 6.67 * Math.pow(10, -11);

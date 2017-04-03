@@ -1,18 +1,20 @@
+package Parallel;
 import java.awt.geom.Point2D;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
 
+
 public class NBodyParallel implements Observer {
 	private static int barrierStages, numWorkers;
 	public static final double G = 6.67 * Math.pow(10, -11);
 	public static final int MASS = 10000000;
-	public static final double DT = 1;
+	public static final double DT = .5;
 	private int numBodies;
 	private int bodyRadius;
-	private Vector<Body> oldbodies;
-	private Vector<Body> newbodies;
+	private Vector<BodyP> oldbodies;
+	private Vector<BodyP> newbodies;
 	private final int dimension = 600;
 	private Semaphore[][] semaphores = null;
 	
@@ -28,7 +30,7 @@ public class NBodyParallel implements Observer {
         oldbodies = new Vector<>(numBodies);
 		newbodies = new Vector<>(numBodies);
 		for (int i = 0; i < numBodies; i++){
-			Body b = new Body(dimension/2, bodyRadius);
+			BodyP b = new BodyP(dimension/2, bodyRadius, numWorkers);
 			oldbodies.add(b);
 			newbodies.add(b);
 		}
@@ -60,27 +62,11 @@ public class NBodyParallel implements Observer {
 			}
 		}
 		
-		// Create new worker threads with their own slice of the grid to compute
-		int step = numBodies / numWorkers;
-		Range[] ranges = new Range[numWorkers];
-		for (int i = 0; i < numWorkers; ++i) {
-			ranges[i] = new Range();
-		}
-		ranges[0].startIndex = 0;
-		ranges[0].endIndex = step - 1;	
+		// Create new worker threads
 		int i;
 		for (i = 0; i < numWorkers; ++i) {
-			// Update the range
-			if (i > 0) {
-				ranges[i].startIndex = ranges[i-1].endIndex + 1;
-				ranges[i].endIndex = ranges[i-1].endIndex + step;
-			}
-			if (i == numWorkers - 1) {
-				ranges[i].endIndex = numBodies - 1;
-			}
-			System.out.println(ranges[i].startIndex + "-" + ranges[i].endIndex );
 			// Create the thread and start running it
-			Worker worker = new Worker(ranges[i], i, numSteps, model.oldbodies, model.newbodies, model.semaphores, numBodies);
+			Worker worker = new Worker(i, numSteps, model.oldbodies, model.newbodies, model.semaphores, numBodies);
 			worker.addObserver(model);
 			workers[i] = new Thread(worker);
 			workers[i].start();
@@ -99,13 +85,12 @@ public class NBodyParallel implements Observer {
 	
 	
 	private static class Worker extends Observable implements Runnable {
-		private int startIndex, endIndex, id, numSteps, numBodies;
-		private Vector<Body> oldbodies, newbodies;
+		private int id, numSteps, numBodies;
+		private Vector<BodyP> oldbodies, newbodies;
 		private Semaphore[][] semaphores;
 		
-		public Worker(Range range, int id, int numSteps, Vector<Body> oldbodies, Vector<Body> newbodies, Semaphore[][] semaphores, int numBodies) {
-			this.startIndex = range.startIndex;
-			this.endIndex = range.endIndex;
+		public Worker(int id, int numSteps, Vector<BodyP> oldbodies, Vector<BodyP> newbodies, Semaphore[][] semaphores, int numBodies) {
+
 			this.id = id;
 			this.numSteps = numSteps;
 			this.oldbodies = oldbodies;
@@ -136,8 +121,10 @@ public class NBodyParallel implements Observer {
 				
 				dissemBarrier(id, semaphores, barrierStages, numWorkers);
 
-				this.setChanged();
-				this.notifyObservers();
+				if (id == 0) {
+					this.setChanged();
+					this.notifyObservers();
+				}
 			}
 			
 		}
@@ -145,11 +132,11 @@ public class NBodyParallel implements Observer {
 		public void calculateForces(){
 			double dist, mag;
 			Point2D dir, newforce;
-			Body body1, body2;
+			BodyP body1, body2;
 			Point2D pos1, pos2;
 			Point2D force1, force2;
 			
-			for (int i = startIndex; i <= endIndex; i++){
+			for (int i = id; i < numBodies; i+=numWorkers){
 				body1 = oldbodies.get(i);
 				for (int j = i+1; j < numBodies; j++) {
 					if (j >= oldbodies.size()) { System.out.println("OH NO!" + j + ">=" + oldbodies.size()); }
@@ -157,8 +144,8 @@ public class NBodyParallel implements Observer {
 					pos1 = body1.getPos();
 					pos2 = body2.getPos();
 					
-					force1 = body1.getForce();
-					force2 = body2.getForce();
+					force1 = body1.getForce(id);
+					force2 = body2.getForce(id);
 					
 					dist = pos1.distance(pos2); //not sure about this line pos1-pos2 or pos2-pos1
 					if (dist == 0) {
@@ -169,20 +156,20 @@ public class NBodyParallel implements Observer {
 					dir = new Point2D.Double(pos2.getX() - pos1.getX(), pos2.getY() - pos1.getY());
 					newforce = new Point2D.Double((mag*dir.getX())/dist, (mag*dir.getY())/dist);
 					
-					newbodies.get(i).setForce(force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
-					newbodies.get(j).setForce(force2.getX() - newforce.getX(), force2.getY() - newforce.getY());	
+					newbodies.get(i).setForce(id, force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
+					newbodies.get(j).setForce(id, force2.getX() - newforce.getX(), force2.getY() - newforce.getY());	
 				}
 			}	
 		}
 		
 		public void moveBodies(){
 			Point2D dv, dp, force, velocity, position;
-			Body body;
+			BodyP body;
 			
-			for (int i = startIndex; i <= endIndex; i++){
+			for (int i = id; i < numBodies; i+=numWorkers){
 				if (i >= oldbodies.size()) { System.out.println("OH NO!" + i + ">=" + oldbodies.size()); }
 				body = oldbodies.get(i);
-				force = body.getForce();
+				force = body.getForceSum();
 				velocity = body.getVel();
 				position = body.getPos();
 				dv = new Point2D.Double(force.getX()/MASS * DT, force.getY()/MASS * DT);
@@ -191,7 +178,7 @@ public class NBodyParallel implements Observer {
 				
 				body.setVel(velocity.getX() + dv.getX(), velocity.getY() + dv.getY());
 				body.setPos(position.getX() + dp.getX(), position.getY() + dp.getY());
-				body.setForce(0.0,  0.0);
+				body.setForce(id, 0.0,  0.0);
 			}
 		}
 		
@@ -234,18 +221,11 @@ public class NBodyParallel implements Observer {
 	
 	public void draw() {
 		StdDraw.clear();
-		for (Body body : newbodies) {
+		for (BodyP body : newbodies) {
 			Point2D pos = body.getPos();
 			StdDraw.filledCircle(pos.getX(), pos.getY(), body.getRadius());
 		}
 		StdDraw.show();
-	}
-	
-	/**
-	 * Simple class to hold the range of which bodies a worker should update.
-	 */
-	private static class Range {
-		public int startIndex, endIndex;
 	}
 
 	public void update(Observable o, Object arg) {
