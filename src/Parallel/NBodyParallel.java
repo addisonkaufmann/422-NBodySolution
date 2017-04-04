@@ -1,5 +1,11 @@
 package Parallel;
 import java.awt.geom.Point2D;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -17,6 +23,8 @@ public class NBodyParallel implements Observer {
 	private Vector<BodyP> newbodies;
 	private final int dimension = 600;
 	private Semaphore[][] semaphores = null;
+	private static long barrierSec = 0, barrierNano = 0;
+
 	
 	public NBodyParallel(int numBodies, int bodyRadius, int numWorkers, int barrierStages) {
 		StdDraw.setCanvasSize(dimension, dimension);
@@ -38,7 +46,7 @@ public class NBodyParallel implements Observer {
 	}
 	
 	public static void main (String [] args){
-		args = new String[]{"4", "20", "10", "1000"};
+		args = new String[]{"4", "50", "10", "1000"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -62,6 +70,9 @@ public class NBodyParallel implements Observer {
 			}
 		}
 		
+		// Begin time analysis
+		Instant start = Instant.now();
+		
 		// Create new worker threads
 		int i;
 		for (i = 0; i < numWorkers; ++i) {
@@ -81,16 +92,51 @@ public class NBodyParallel implements Observer {
 				System.exit(-1);
 			}
 		}
+		
+		// End time analysis
+		Instant end = Instant.now();
+		
+		// Print results to file
+		try {
+			boolean exists = false;
+			File f = new File("NBodyResultsParallel.csv");
+			if(f.exists() && !f.isDirectory()) { 
+				exists = true;
+			}
+			BufferedWriter bw = new BufferedWriter(new FileWriter("NBodyResultsParallel.csv", true));
+			if (!exists) {
+				bw.write("Runtime, TotalTimeInBarrier\n");
+			}
+			Double nanos = ((double)barrierNano/1000000000);
+			String runtime = Duration.between(start, end).toString();
+			bw.write(runtime.substring(2, runtime.length()-1) + "," + barrierSec + "." + nanos.toString().substring(2) );
+			bw.newLine();
+			bw.flush();
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		System.out.println("Done");
 	}
 	
-	
+	/**
+	 * This worker class does the calculations to simulate the movement of bodies with gravitational forces.
+	 * Threads handle the calculations in stripes. For example, given 4 threads (0,1,2,3) and 8 bodies (o):
+	 * 
+	 * 0 1 2 3 0 1 2 3 
+	 * o o o o o o o o
+	 * 
+	 * where threads handle the bodies below their number.
+	 * @author Aaron Woodward & Addison Kaufmann
+	 *
+	 */
 	private static class Worker extends Observable implements Runnable {
 		private int id, numSteps, numBodies;
 		private Vector<BodyP> oldbodies, newbodies;
 		private Semaphore[][] semaphores;
 		
 		public Worker(int id, int numSteps, Vector<BodyP> oldbodies, Vector<BodyP> newbodies, Semaphore[][] semaphores, int numBodies) {
-
 			this.id = id;
 			this.numSteps = numSteps;
 			this.oldbodies = oldbodies;
@@ -100,35 +146,61 @@ public class NBodyParallel implements Observer {
 		}
 
 		public void run() {
+			Instant start = null, end = null;
 			for (int i = 0; i < numSteps; ++i) {
 				calculateForces();
 				
+				if (id == 0) start = Instant.now();
 				dissemBarrier(id, semaphores, barrierStages, numWorkers);
 				
 				if (id == 0) {
+					end = Instant.now();
+					barrierSec += Duration.between(start, end).getSeconds();
+					barrierNano += Duration.between(start, end).getNano();
+					
 					oldbodies.clear();
 					oldbodies.addAll(newbodies);
 				}
 				
+				if (id == 0) start = Instant.now();
 				dissemBarrier(id, semaphores, barrierStages, numWorkers);
+				if (id == 0) {
+					end = Instant.now();
+					barrierSec += Duration.between(start, end).getSeconds();
+					barrierNano += Duration.between(start, end).getNano();
+				}
 				
 				moveBodies();
 				
-				
+				if (id == 0) start = Instant.now();
+				dissemBarrier(id, semaphores, barrierStages, numWorkers);
+
 				if (id == 0) {
-					adjustCollisions();
+					end = Instant.now();
+					barrierSec += Duration.between(start, end).getSeconds();
+					barrierNano += Duration.between(start, end).getNano();
+					
+					adjustCollisions(); // FIXME: Do in parallel
 				}
 				
+				if (id == 0) start = Instant.now();
 				dissemBarrier(id, semaphores, barrierStages, numWorkers);
 
 				if (id == 0){
+					end = Instant.now();
+					barrierSec += Duration.between(start, end).getSeconds();
+					barrierNano += Duration.between(start, end).getNano();
+					
 					this.setChanged();
-					this.notifyObservers();
+					this.notifyObservers(); // Redraw
 				}
 			}
 			
 		}
 		
+		/**
+		 * Calculates the force of every body on this thread's bodies (bodies are in stripes).
+		 */
 		public void calculateForces(){
 			double dist, mag;
 			Point2D dir, newforce;
@@ -147,7 +219,7 @@ public class NBodyParallel implements Observer {
 					force1 = body1.getForce(id);
 					force2 = body2.getForce(id);
 					
-					dist = pos1.distance(pos2); //not sure about this line pos1-pos2 or pos2-pos1
+					dist = pos1.distance(pos2);
 					if (dist == 0) {
 						System.err.println("Divide by zero.");
 					}
@@ -162,6 +234,10 @@ public class NBodyParallel implements Observer {
 			}	
 		}
 		
+		/**
+		 * Updates one thread's bodies' velocities & positions (bodies are in stripes) 
+		 * based upon their newly calculated forces.
+		 */
 		public void moveBodies(){
 			Point2D dv, dp, force, velocity, position;
 			BodyP body;
@@ -182,17 +258,31 @@ public class NBodyParallel implements Observer {
 			}
 		}
 		
+		/**
+		 * Checks for collisions and updates the velocities of any collided bodies.
+		 */
 		public void adjustCollisions(){
 			for (int i = 0; i < numBodies-1; i++){
 				for (int j = i + 1 ; j < numBodies; j++){
 					if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
-						newbodies.get(i).calculateCollision(newbodies.get(j));
-//						System.out.println("collision between " + i + " and " + j);					
+						if (isMine(id, i)) {
+							newbodies.get(i).calculateCollision(newbodies.get(j));
+//							System.out.println("collision between " + i + " and " + j);			
+						}
 					}
 				}
 			}
 			oldbodies.clear();
 			oldbodies.addAll(newbodies);
+		}
+		
+		private boolean isMine(int id, int index) {
+			for (int i = id; i < numBodies; i+=numWorkers) {
+				if (index == i) {
+					return true;
+				}
+			}
+			return true;
 		}
 		
 	}

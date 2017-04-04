@@ -1,5 +1,11 @@
 package Sequential;
 import java.awt.geom.Point2D;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 
 import Parallel.StdDraw;
@@ -25,6 +31,8 @@ public class NBodySequential {
 		int bodyRadius = Integer.parseInt(args[2]);
 		int numSteps = Integer.parseInt(args[3]);
 		NBodySequential n = new NBodySequential(numBodies, bodyRadius);
+		
+		Instant start = Instant.now();
 		for (int i = 0 ; i < numSteps; i++){
 			System.out.println(i);
 			//System.out.println(n.toString());
@@ -33,7 +41,29 @@ public class NBodySequential {
 			n.draw();
 			
 		}
-
+		// End time analysis
+		Instant end = Instant.now();
+		
+		// Print results to file
+		try {
+			boolean exists = false;
+			File f = new File("NBodyResultsSequential.csv");
+			if(f.exists() && !f.isDirectory()) { 
+				exists = true;
+			}
+			BufferedWriter bw = new BufferedWriter(new FileWriter("NBodyResultsSequential.csv", true));
+			if (!exists) {
+				bw.write("Runtime\n");
+			}
+			String runtime = Duration.between(start, end).toString();
+			bw.write(runtime.substring(2, runtime.length()-1));
+			bw.newLine();
+			bw.flush();
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 	public NBodySequential(int numBodies, int bodyRadius){
 		StdDraw.setCanvasSize(dimension, dimension);
@@ -70,7 +100,7 @@ public class NBodySequential {
 				force1 = body1.getForce();
 				force2 = body2.getForce();
 				
-				dist = pos1.distance(pos2); //not sure about this line pos1-pos2 or pos2-pos1
+				dist = pos1.distance(pos2);
 				if (dist == 0) {
 					System.err.println("Divide by zero.");
 				}
