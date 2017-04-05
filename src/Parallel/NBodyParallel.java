@@ -9,8 +9,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
+
+import org.apache.commons.cli.*;
+
 
 /**
  * This program models n bodies gravitation in parallel. It 
@@ -29,43 +33,56 @@ public class NBodyParallel implements Observer {
 	private static int barrierStages, numWorkers;
 	public static final double G = 6.67 * Math.pow(10, -11);
 	public static final int MASS = 10000000;
-	public static final double DT = .5;
+	public static double DT = .5;
 	private int numBodies;
 	private int bodyRadius;
 	private Vector<BodyP> oldbodies;
 	private Vector<BodyP> newbodies;
-	private final int dimension = 600;
+	private static int dimension = 600;
 	private Semaphore[][] semaphores = null;
 	private static long barrierSec = 0, barrierNano = 0;
 	private static int numCollisions = 0;
+	private static int seed;
+	private static boolean hasSeed = false;
+	private static boolean gui = false;
 
 	
 	public NBodyParallel(int numBodies, int bodyRadius, int numWorkers, int barrierStages) {
-		StdDraw.setCanvasSize(dimension, dimension);
-		StdDraw.setXscale(-(dimension/2),(dimension/2)); 
-        StdDraw.setYscale(-(dimension/2), (dimension/2));
-        StdDraw.setPenColor(StdDraw.BOOK_BLUE);	
+		if (gui){
+			StdDraw.setCanvasSize(dimension, dimension);
+			StdDraw.setXscale(-(dimension/2),(dimension/2)); 
+	        StdDraw.setYscale(-(dimension/2), (dimension/2));
+	        StdDraw.setPenColor(StdDraw.BOOK_BLUE);
+		}
         this.numBodies = numBodies;
         this.bodyRadius = bodyRadius;
         this.numWorkers = numWorkers;
         this.barrierStages = barrierStages;
         oldbodies = new Vector<>(numBodies);
 		newbodies = new Vector<>(numBodies);
+		Random randy = null;
+		if (hasSeed){
+			randy = new Random(seed);
+		}
 		for (int i = 0; i < numBodies; i++){
-			BodyP b = new BodyP(dimension/2, bodyRadius, numWorkers);
+			BodyP b = null;
+			if (hasSeed){
+				b = new BodyP(dimension/2, bodyRadius, numWorkers, randy);
+			} else {
+				b = new BodyP(dimension/2, bodyRadius, numWorkers);
+			}
 			oldbodies.add(b);
 			newbodies.add(b);
 		}
-		draw();
+		if (gui){
+			draw();
+		}
 	}
 	
 	public static void main (String [] args){
-		args = new String[]{"8", "20", "10", "500"};
-		if (args.length < 4){
-			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
-			System.exit(1);
-		}
+		args = new String[]{"8", "10", "10", "500", "-s", "20", "-g"};
 		
+		checkInput(args);
 		int numWorkers = Integer.parseInt(args[0]);
 		int numBodies = Integer.parseInt(args[1]);
 		int bodyRadius = Integer.parseInt(args[2]);
@@ -124,7 +141,7 @@ public class NBodyParallel implements Observer {
 			Double nanos = ((double)barrierNano/1000000000);
 			String runtime = Duration.between(start, end).toString();
 			bw.write(runtime.substring(2, runtime.length()-1) + "," + barrierSec + "." + nanos.toString().substring(2) );
-			System.out.println("Computation time: " + runtime.substring(2, runtime.length()-1) + " seconds.");
+			System.out.println("Computation time: " + runtime.substring(2, runtime.length()-1) + " seconds");
 			System.out.println("Number of collisions: " + numCollisions);
 			bw.newLine();
 			bw.flush();
@@ -347,6 +364,44 @@ public class NBodyParallel implements Observer {
 	}
 
 	public void update(Observable o, Object arg) {
-		draw();
+		if (gui){
+			draw();
+		}
+	}
+	
+	private static void checkInput(String[] args) {
+		if (args.length < 4){
+			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps [-g] [-s x] [-dt x] [-d x]");
+			System.exit(1);
+		} 
+
+        Options ops = new Options();
+        ops.addOption("g", "gui", false, "Display the gui");
+        ops.addOption("s", "seed", true, "Set a seed for the random bodies");
+        ops.addOption("d", "dimension", true, "Specify a window size");
+        ops.addOption("dt", "timedelta", true, "Specify a time delta");
+        
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = null;
+        try {
+        	cmd = parser.parse( ops, args);
+		} catch (ParseException e) {
+			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps [-g] [-s x] [-dt x] [-d x]");
+			System.exit(1);
+		}
+        
+        if (cmd.hasOption("g")){
+        	gui = true;
+        }
+        if (cmd.hasOption("s")){
+        	hasSeed = true;
+        	seed = Integer.parseInt(cmd.getOptionValue("s"));
+        }
+        if (cmd.hasOption("d")){
+        	dimension = Integer.parseInt(cmd.getOptionValue("d")); 
+        }
+        if (cmd.hasOption("dt")){
+        	DT = Double.parseDouble(cmd.getOptionValue("dt"));
+        }        
 	}
 }

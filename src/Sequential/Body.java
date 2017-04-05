@@ -26,6 +26,19 @@ public class Body {
 		this.radius = radius;
 	}
 	
+	public Body(int bounds, int radius, Random randy){
+		int maxpos = bounds, minpos = -1*bounds;
+		int minvel = -5, maxvel = 5;
+
+		this.pos = new Point2D.Double(minpos + (maxpos - minpos) * randy.nextDouble(), minpos + (maxpos - minpos) * randy.nextDouble());	
+		this.vel = new Point2D.Double(minvel + (maxvel - minvel) * randy.nextDouble(), minvel + (maxvel - minvel) * randy.nextDouble());		
+
+		//this.vel = new Point2D.Double(0.0, 0.0);
+
+		this.force = new Point2D.Double(0.0, 0.0);
+		this.radius = radius;
+	}
+	
 	public Body(Point2D pos, Point2D vel, Point2D force, double radius) {
 		this.pos = pos;
 		this.vel = vel;

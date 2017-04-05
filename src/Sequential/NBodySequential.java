@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Random;
+import org.apache.commons.cli.*;
 
 import Parallel.StdDraw;
 
@@ -24,19 +26,19 @@ import Parallel.StdDraw;
 public class NBodySequential {
 	public final double G = 6.67 * Math.pow(10, -11);
 	public final int MASS = 10000000;
-	public final double DT = 1;
+	public static double DT = 1;
 	private int numBodies;
 	private int bodyRadius;
 	private ArrayList<Body> oldbodies;
 	private ArrayList<Body> newbodies;
-	private final int dimension = 600;
-	
+	private static int dimension = 600;
+	private static boolean gui = false;
+	private static boolean hasSeed = false;
+	private static int seed;
+
 	public static void main (String [] arg){
-		String [] args = {"0", "20", "10", "1000"};
-		if (args.length < 4){
-			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps");
-			System.exit(1);
-		}
+		String [] args = {"0", "20", "10", "1000", "-g"};
+		checkInput(args);
 		
 		int numBodies = Integer.parseInt(args[1]);
 		int bodyRadius = Integer.parseInt(args[2]);
@@ -47,7 +49,9 @@ public class NBodySequential {
 		for (int i = 0 ; i < numSteps; i++){
 			n.calculateForces();
 			n.moveBodies();
-			n.draw();
+			if (gui){
+				n.draw();
+			}
 			
 		}
 		// End time analysis
@@ -75,25 +79,39 @@ public class NBodySequential {
 		}
 	}
 	
+
 	/**
 	 * Constructor for this class - creates bodies at a given radius
 	 * @param numBodies
 	 * @param bodyRadius
 	 */
 	public NBodySequential(int numBodies, int bodyRadius){
-		StdDraw.setCanvasSize(dimension, dimension);
-		StdDraw.setXscale(-(dimension/2),(dimension/2)); 
-        StdDraw.setYscale(-(dimension/2), (dimension/2));
+		if (gui){
+			StdDraw.setCanvasSize(dimension, dimension);
+			StdDraw.setXscale(-(dimension/2),(dimension/2)); 
+			StdDraw.setYscale(-(dimension/2), (dimension/2));
+		}
 		this.numBodies = numBodies;
 		this.bodyRadius = bodyRadius;
 		oldbodies = new ArrayList<>();
 		newbodies = new ArrayList<>();
+		Random randy = null;
+		if (hasSeed){
+			randy = new Random(seed);
+		}
 		for (int i = 0; i < numBodies; i++){
-			Body b = new Body(dimension/2, bodyRadius);
+			Body b = null;
+			if (hasSeed){
+				b = new Body(dimension/2, bodyRadius, randy);
+			} else {
+				b = new Body(dimension/2, bodyRadius);
+			}
 			oldbodies.add(b);
 			newbodies.add(b);
 		}
-		draw();
+		if (gui){
+			draw();
+		}
 
 	}
 
@@ -202,4 +220,39 @@ public class NBodySequential {
 		return s.toString();
 	}
 	
+	private static void checkInput(String[] args) {
+		if (args.length < 4){
+			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps [-gui] [-seed=x]");
+			System.exit(1);
+		} 
+
+        Options ops = new Options();
+        ops.addOption("g", "gui", false, "Display the gui");
+        ops.addOption("s", "seed", true, "Set a seed for the random bodies");
+        ops.addOption("d", "dimension", true, "Specify a window size");
+        ops.addOption("dt", "timedelta", true, "Specify a time delta");
+        
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = null;
+        try {
+        	cmd = parser.parse( ops, args);
+		} catch (ParseException e) {
+			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps [-g] [-s x] [-dt x] [-d x]");
+			System.exit(1);
+		}
+        
+        if (cmd.hasOption("g")){
+        	gui = true;
+        }
+        if (cmd.hasOption("s")){
+        	hasSeed = true;
+        	seed = Integer.parseInt(cmd.getOptionValue("s"));
+        }
+        if (cmd.hasOption("d")){
+        	dimension = Integer.parseInt(cmd.getOptionValue("d")); 
+        }
+        if (cmd.hasOption("dt")){
+        	DT = Double.parseDouble(cmd.getOptionValue("dt"));
+        }        
+	}	
 }
