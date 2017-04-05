@@ -82,7 +82,7 @@ public class NBodyParallel implements Observer {
 	}
 	
 	public static void main (String [] arg){
-		String [] args = {"6", "100", "10", "1000", "-g", "-s", "20"};
+		String [] args = {"6", "1000", "10", "1000", "-g", "-s", "20"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -290,34 +290,17 @@ public class NBodyParallel implements Observer {
 		 * Checks for collisions and updates the velocities of any collided bodies.
 		 */
 		public void adjustCollisions(){
-			for (int i = 0; i < numBodies-1; i++){
+			for (int i = id; i < numBodies-1; i+=numWorkers){
 				for (int j = i + 1 ; j < numBodies; j++){
 					if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
-						if (isMine(id, i)) {
-							numCollisions++;
-							newbodies.get(i).calculateCollision(newbodies.get(j));
-//							System.out.println("collision between " + i + " and " + j);			
-						}
+						numCollisions++;
+						newbodies.get(i).calculateCollision(newbodies.get(j));
 					}
 				}
 			}
 		}
 		
-		/**
-		 * Checks if a given body is part of a given thread's stripes.
-		 * @param id the thread ID.
-		 * @param index the index of the body in the bodies array.
-		 * @return true if in the thread's stripes, false if not.
-		 */
-		private boolean isMine(int id, int index) {
-			for (int i = id; i < numBodies; i+=numWorkers) {
-				if (index == i) {
-					return true;
-				}
-			}
-			return false;
-		}
-		
+		// cyclic barrier class as alternative
 		private void barrier() {
 			Instant start = null, end;
 			if (id == 0) start = Instant.now();

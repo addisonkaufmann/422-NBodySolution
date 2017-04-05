@@ -38,7 +38,7 @@ public class NBodySequential {
 	private static int seed;
 
 	public static void main (String [] arg){
-		String [] args = {"0", "100", "10", "1000", "-g", "-s", "20"};
+		String [] args = {"0", "1000", "10", "1000", "-g", "-s", "20"};
 		checkInput(args);
 		
 		int numBodies = Integer.parseInt(args[1]);
