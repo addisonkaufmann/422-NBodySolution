@@ -80,7 +80,8 @@ public class NBodySequential {
 
 			PrintWriter writer = new PrintWriter("NBodySequentialFinalPositions.txt", "UTF-8");
 			for (Body body : n.newbodies) {
-				writer.println(body.getPos().toString());
+				writer.println("Pos: " + body.getPos().toString());
+				writer.println("Vel: " + body.getVel().toString());
 			}
 			writer.close();
 		} catch (IOException e) {

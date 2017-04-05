@@ -155,7 +155,8 @@ public class NBodyParallel implements Observer {
 			
 			 PrintWriter writer = new PrintWriter("NBodyParallelFinalPositions.txt", "UTF-8");
 			 for (BodyP body : model.newbodies) {
-				 writer.println(body.getPos().toString());
+				 writer.println("Pos: " + body.getPos().toString());
+				 writer.println("Vel: " + body.getVel().toString());
 			 }
 			 writer.close();
 		} catch (IOException e) {
