@@ -82,7 +82,7 @@ public class NBodyParallel implements Observer {
 	}
 	
 	public static void main (String [] arg){
-		String [] args = {"4", "100", "10", "1000", "-g", "-s", "20"};
+		String [] args = {"6", "100", "10", "1000", "-g", "-s", "20"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -208,6 +208,13 @@ public class NBodyParallel implements Observer {
 				barrier();
 				
 				adjustCollisions();
+				
+				barrier();
+
+				if (id == 0) {
+					oldbodies.clear();
+					oldbodies.addAll(newbodies);
+				}
 					
 				barrier();
 
@@ -286,16 +293,14 @@ public class NBodyParallel implements Observer {
 			for (int i = 0; i < numBodies-1; i++){
 				for (int j = i + 1 ; j < numBodies; j++){
 					if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
-						numCollisions++;
 						if (isMine(id, i)) {
+							numCollisions++;
 							newbodies.get(i).calculateCollision(newbodies.get(j));
 //							System.out.println("collision between " + i + " and " + j);			
 						}
 					}
 				}
 			}
-			oldbodies.clear();
-			oldbodies.addAll(newbodies);
 		}
 		
 		/**
