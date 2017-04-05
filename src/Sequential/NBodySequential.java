@@ -4,10 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-
 import Parallel.StdDraw;
 
 /**
@@ -30,6 +30,7 @@ public class NBodySequential {
 	private ArrayList<Body> oldbodies;
 	private ArrayList<Body> newbodies;
 	private final int dimension = 600;
+	private static int numCollisions = 0;
 	
 	public static void main (String [] arg){
 		String [] args = {"0", "20", "10", "1000"};
@@ -69,6 +70,15 @@ public class NBodySequential {
 			bw.newLine();
 			bw.flush();
 			bw.close();
+			
+			System.out.println("Computation time: " + runtime.substring(2, runtime.length()-1) + " seconds.");
+			System.out.println("Number of collisions: " + numCollisions);
+
+			PrintWriter writer = new PrintWriter("NBodySequentialFinalPositions.txt", "UTF-8");
+			for (Body body : n.newbodies) {
+				writer.println(body.getPos().toString());
+			}
+			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(-1);
@@ -81,6 +91,7 @@ public class NBodySequential {
 	 * @param bodyRadius
 	 */
 	public NBodySequential(int numBodies, int bodyRadius){
+		StdDraw.enableDoubleBuffering();
 		StdDraw.setCanvasSize(dimension, dimension);
 		StdDraw.setXscale(-(dimension/2),(dimension/2)); 
         StdDraw.setYscale(-(dimension/2), (dimension/2));
@@ -168,6 +179,7 @@ public class NBodySequential {
 		for (int i = 0; i < numBodies-1; i++){
 			for (int j = i + 1 ; j < numBodies; j++){
 				if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
+					numCollisions++;
 					newbodies.get(i).calculateCollision(newbodies.get(j));
 				}
 			}
