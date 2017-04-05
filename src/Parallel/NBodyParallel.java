@@ -12,7 +12,19 @@ import java.util.Observer;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
 
-
+/**
+ * This program models n bodies gravitation in parallel. It 
+ * reads parameters, creates the bodies (either randomly or
+ * optionally by input), and calculates their new 
+ * forces and positions for each time step. The work is
+ * split in stripes so each thread has several bodies to
+ * perform calculations for, spread out in the array list.
+ * It optionally draws each time step to stddraw window
+ * and prints results to a file.
+ * 
+ * @author Addison Kaufmann, Aaron Woodward
+ *
+ */
 public class NBodyParallel implements Observer {
 	private static int barrierStages, numWorkers;
 	public static final double G = 6.67 * Math.pow(10, -11);

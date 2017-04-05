@@ -12,9 +12,11 @@ import Parallel.StdDraw;
 
 /**
  * This program models n bodies gravitation in sequence. It 
- * reads parameters, creates the bodies, and calculates their
- * new forces and positions for each time step. It draws each 
- * time step to stddraw window, and prints results to a file.
+ * reads parameters, creates the bodies (either randomly or
+ * optionally from an input file), and calculates their
+ * new forces and positions for each time step. It optionally 
+ * draws each time step to stddraw window, and prints results 
+ * to a file.
  * 
  * @author Addison Kaufmann, Aaron Woodward
  *
