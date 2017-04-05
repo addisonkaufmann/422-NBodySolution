@@ -10,6 +10,15 @@ import java.util.ArrayList;
 
 import Parallel.StdDraw;
 
+/**
+ * This program models n bodies gravitation in sequence. It 
+ * reads parameters, creates the bodies, and calculates their
+ * new forces and positions for each time step. It draws each 
+ * time step to stddraw window, and prints results to a file.
+ * 
+ * @author Addison Kaufmann, Aaron Woodward
+ *
+ */
 public class NBodySequential {
 	public final double G = 6.67 * Math.pow(10, -11);
 	public final int MASS = 10000000;
@@ -34,8 +43,6 @@ public class NBodySequential {
 		
 		Instant start = Instant.now();
 		for (int i = 0 ; i < numSteps; i++){
-			System.out.println(i);
-			//System.out.println(n.toString());
 			n.calculateForces();
 			n.moveBodies();
 			n.draw();
@@ -65,6 +72,12 @@ public class NBodySequential {
 			System.exit(-1);
 		}
 	}
+	
+	/**
+	 * Constructor for this class - creates bodies at a given radius
+	 * @param numBodies
+	 * @param bodyRadius
+	 */
 	public NBodySequential(int numBodies, int bodyRadius){
 		StdDraw.setCanvasSize(dimension, dimension);
 		StdDraw.setXscale(-(dimension/2),(dimension/2)); 
@@ -79,10 +92,14 @@ public class NBodySequential {
 			newbodies.add(b);
 		}
 		draw();
-		System.out.println("ehllo");
 
 	}
 
+	/**
+	 * Calculates the forces on each body in oldbodies. Places
+	 * the new calculated into newbodies, and then copies them back
+	 * at the end.
+	 */
 	public void calculateForces(){
 		double dist, mag;
 		Point2D dir, newforce;
@@ -117,6 +134,9 @@ public class NBodySequential {
 		oldbodies.addAll(newbodies);		
 	}
 	
+	/**
+	 * Move bodies to their new positions according to the calculation.
+	 */
 	public void moveBodies(){
 		Point2D dv, dp, force, velocity, position;
 		Body body;
@@ -138,12 +158,15 @@ public class NBodySequential {
 		adjustCollisions();	
 	}
 	
+	/**
+	 * Check if each body has collided with any other,
+	 * If so calculate their new positon/velocity.
+	 */
 	public void adjustCollisions(){
 		for (int i = 0; i < numBodies-1; i++){
 			for (int j = i + 1 ; j < numBodies; j++){
 				if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
 					newbodies.get(i).calculateCollision(newbodies.get(j));
-					System.out.println("collision between " + i + " and " + j);					
 				}
 			}
 		}
@@ -151,6 +174,9 @@ public class NBodySequential {
 		oldbodies.addAll(newbodies);
 	}
 	
+	/**
+	 * Draw all bodies to stddraw
+	 */
 	public void draw() {
 		StdDraw.clear();
 		StdDraw.setPenColor(StdDraw.BOOK_BLUE);
@@ -163,6 +189,9 @@ public class NBodySequential {
 		StdDraw.show();
 	}
 	
+	/**
+	 * String version of the bodies
+	 */
 	public String toString(){
 		StringBuffer s = new StringBuffer("");
 		for (Body b: oldbodies){
