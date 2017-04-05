@@ -31,6 +31,22 @@ public class BodyP {
 		}
 		this.radius = radius;
 	}
+	
+	public BodyP(int bounds, int radius, int numWorkers, Random randy){
+		int maxpos = bounds, minpos = -1*bounds;
+		int minvel = -5, maxvel = 5;
+
+		this.pos = new Point2D.Double(minpos + (maxpos - minpos) * randy.nextDouble(), minpos + (maxpos - minpos) * randy.nextDouble());	
+		this.vel = new Point2D.Double(minvel + (maxvel - minvel) * randy.nextDouble(), minvel + (maxvel - minvel) * randy.nextDouble());		
+
+		//this.vel = new Point2D.Double(0.0, 0.0);
+
+		this.force = new Vector<Point2D>();
+		for (int i = 0; i < numWorkers; i++) {
+			this.force.add(new Point2D.Double(0.0, 0.0));
+		}
+		this.radius = radius;
+	}
 
 	public Point2D getPos() {
 		return pos;
