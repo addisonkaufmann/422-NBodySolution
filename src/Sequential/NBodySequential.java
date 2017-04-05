@@ -26,7 +26,7 @@ import Parallel.StdDraw;
 public class NBodySequential {
 	public final double G = 6.67 * Math.pow(10, -11);
 	public final int MASS = 10000000;
-	public static double DT = 1;
+	public static double DT = .5;
 	private int numBodies;
 	private int bodyRadius;
 	private ArrayList<Body> oldbodies;
@@ -38,7 +38,7 @@ public class NBodySequential {
 	private static int seed;
 
 	public static void main (String [] arg){
-		String [] args = {"0", "20", "10", "1000", "-g"};
+		String [] args = {"0", "100", "10", "1000", "-g", "-s", "20"};
 		checkInput(args);
 		
 		int numBodies = Integer.parseInt(args[1]);

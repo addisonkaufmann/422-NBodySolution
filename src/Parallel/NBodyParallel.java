@@ -81,8 +81,8 @@ public class NBodyParallel implements Observer {
 		}
 	}
 	
-	public static void main (String [] args){
-		args = new String[]{"8", "10", "10", "500", "-s", "20", "-g"};	
+	public static void main (String [] arg){
+		String [] args = {"4", "100", "10", "1000", "-g", "-s", "20"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -191,51 +191,27 @@ public class NBodyParallel implements Observer {
 		}
 
 		public void run() {
-			Instant start = null, end = null;
 			for (int i = 0; i < numSteps; ++i) {
 				calculateForces();
 				
-				if (id == 0) start = Instant.now();
-				dissemBarrier(id, semaphores, barrierStages, numWorkers);
+				barrier();
 				
 				if (id == 0) {
-					end = Instant.now();
-					barrierSec += Duration.between(start, end).getSeconds();
-					barrierNano += Duration.between(start, end).getNano();
-					
 					oldbodies.clear();
 					oldbodies.addAll(newbodies);
 				}
 				
-				if (id == 0) start = Instant.now();
-				dissemBarrier(id, semaphores, barrierStages, numWorkers);
-				if (id == 0) {
-					end = Instant.now();
-					barrierSec += Duration.between(start, end).getSeconds();
-					barrierNano += Duration.between(start, end).getNano();
-				}
+				barrier();
 				
 				moveBodies();
 				
-				if (id == 0) start = Instant.now();
-				dissemBarrier(id, semaphores, barrierStages, numWorkers);
-
-				if (id == 0) {
-					end = Instant.now();
-					barrierSec += Duration.between(start, end).getSeconds();
-					barrierNano += Duration.between(start, end).getNano();
-					
-					adjustCollisions(); // FIXME: Do in parallel
-				}
+				barrier();
 				
-				if (id == 0) start = Instant.now();
-				dissemBarrier(id, semaphores, barrierStages, numWorkers);
+				adjustCollisions();
+					
+				barrier();
 
 				if (id == 0){
-					end = Instant.now();
-					barrierSec += Duration.between(start, end).getSeconds();
-					barrierNano += Duration.between(start, end).getNano();
-					
 					this.setChanged();
 					this.notifyObservers(); // Redraw
 				}
@@ -334,7 +310,19 @@ public class NBodyParallel implements Observer {
 					return true;
 				}
 			}
-			return true;
+			return false;
+		}
+		
+		private void barrier() {
+			Instant start = null, end;
+			if (id == 0) start = Instant.now();
+			dissemBarrier(id, semaphores, barrierStages, numWorkers);
+			
+			if (id == 0) {
+				end = Instant.now();
+				barrierSec += Duration.between(start, end).getSeconds();
+				barrierNano += Duration.between(start, end).getNano();
+			}
 		}
 		
 	}
