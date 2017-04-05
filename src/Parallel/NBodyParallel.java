@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Observable;
@@ -24,6 +25,7 @@ public class NBodyParallel implements Observer {
 	private final int dimension = 600;
 	private Semaphore[][] semaphores = null;
 	private static long barrierSec = 0, barrierNano = 0;
+	private static int numCollisions = 0;
 
 	
 	public NBodyParallel(int numBodies, int bodyRadius, int numWorkers, int barrierStages) {
@@ -46,7 +48,7 @@ public class NBodyParallel implements Observer {
 	}
 	
 	public static void main (String [] args){
-		args = new String[]{"4", "50", "10", "1000"};
+		args = new String[]{"8", "20", "10", "500"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -110,14 +112,21 @@ public class NBodyParallel implements Observer {
 			Double nanos = ((double)barrierNano/1000000000);
 			String runtime = Duration.between(start, end).toString();
 			bw.write(runtime.substring(2, runtime.length()-1) + "," + barrierSec + "." + nanos.toString().substring(2) );
+			System.out.println("Computation time: " + runtime.substring(2, runtime.length()-1) + " seconds.");
+			System.out.println("Number of collisions: " + numCollisions);
 			bw.newLine();
 			bw.flush();
 			bw.close();
+			
+			 PrintWriter writer = new PrintWriter("NBodyParallelFinalPositions.txt", "UTF-8");
+			 for (BodyP body : model.newbodies) {
+				 writer.println(body.getPos().toString());
+			 }
+			 writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		System.out.println("Done");
 	}
 	
 	/**
@@ -265,6 +274,7 @@ public class NBodyParallel implements Observer {
 			for (int i = 0; i < numBodies-1; i++){
 				for (int j = i + 1 ; j < numBodies; j++){
 					if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
+						numCollisions++;
 						if (isMine(id, i)) {
 							newbodies.get(i).calculateCollision(newbodies.get(j));
 //							System.out.println("collision between " + i + " and " + j);			
@@ -276,6 +286,12 @@ public class NBodyParallel implements Observer {
 			oldbodies.addAll(newbodies);
 		}
 		
+		/**
+		 * Checks if a given body is part of a given thread's stripes.
+		 * @param id the thread ID.
+		 * @param index the index of the body in the bodies array.
+		 * @return true if in the thread's stripes, false if not.
+		 */
 		private boolean isMine(int id, int index) {
 			for (int i = id; i < numBodies; i+=numWorkers) {
 				if (index == i) {
