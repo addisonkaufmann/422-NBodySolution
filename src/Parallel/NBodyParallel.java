@@ -49,11 +49,13 @@ public class NBodyParallel implements Observer {
 	
 	public NBodyParallel(int numBodies, int bodyRadius, int numWorkers, int barrierStages) {
 		if (gui){
+			StdDraw.enableDoubleBuffering();
 			StdDraw.setCanvasSize(dimension, dimension);
 			StdDraw.setXscale(-(dimension/2),(dimension/2)); 
 	        StdDraw.setYscale(-(dimension/2), (dimension/2));
 	        StdDraw.setPenColor(StdDraw.BOOK_BLUE);
 		}
+
         this.numBodies = numBodies;
         this.bodyRadius = bodyRadius;
         this.numWorkers = numWorkers;
@@ -80,7 +82,11 @@ public class NBodyParallel implements Observer {
 	}
 	
 	public static void main (String [] args){
-		args = new String[]{"8", "10", "10", "500", "-s", "20", "-g"};
+		args = new String[]{"8", "10", "10", "500", "-s", "20", "-g"};	
+		if (args.length < 4){
+			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
+			System.exit(1);
+		}
 		
 		checkInput(args);
 		int numWorkers = Integer.parseInt(args[0]);
