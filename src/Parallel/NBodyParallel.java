@@ -208,13 +208,8 @@ public class NBodyParallel implements Observer {
 				
 				barrier();
 				
-				adjustCollisions();
-				
-				barrier();
-
 				if (id == 0) {
-					oldbodies.clear();
-					oldbodies.addAll(newbodies);
+					adjustCollisions();
 				}
 					
 				barrier();
@@ -291,14 +286,16 @@ public class NBodyParallel implements Observer {
 		 * Checks for collisions and updates the velocities of any collided bodies.
 		 */
 		public void adjustCollisions() {
-			for (int i = id; i < numBodies-1; i+=numWorkers) {
+			for (int i = 0; i < numBodies-1; i++){
 				for (int j = i + 1 ; j < numBodies; j++){
-					if (oldbodies.get(i).collidedWith(oldbodies.get(j))) {
+					if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
 						numCollisions++;
 						newbodies.get(i).calculateCollision(newbodies.get(j), oldbodies.get(i), oldbodies.get(j));
 					}
 				}
 			}
+			oldbodies.clear();
+			oldbodies.addAll(newbodies);
 		}
 		
 		// cyclic barrier class as alternative
