@@ -74,6 +74,7 @@ public class BodyP {
 		for (Point2D p : force) {
 			x += p.getX();
 			y += p.getY();
+			p.setLocation(0.0, 0.0);
 		}
 		return new Point2D.Double(x,y);
 	}
