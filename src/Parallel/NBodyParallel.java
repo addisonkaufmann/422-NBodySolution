@@ -201,6 +201,13 @@ public class NBodyParallel implements Observer {
 				
 				barrier();
 				
+				if (id == 0) {
+					newbodies.clear();
+					newbodies.addAll(oldbodies);
+				}
+				
+				barrier();
+				
 				adjustCollisions();
 				
 				barrier();
@@ -288,7 +295,7 @@ public class NBodyParallel implements Observer {
 				for (int j = i + 1 ; j < numBodies; j++){
 					if (oldbodies.get(i).collidedWith(oldbodies.get(j))) {
 						numCollisions++;
-						newbodies.get(i).calculateCollision(newbodies.get(j));
+						newbodies.get(i).calculateCollision(newbodies.get(j), oldbodies.get(i), oldbodies.get(j));
 					}
 				}
 			}

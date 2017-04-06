@@ -95,15 +95,15 @@ public class BodyP {
 		return Math.abs(this.pos.distance(that.getPos())) <= radius*2;
 	}
 
-	public void calculateCollision(BodyP that) {
-		double 	v1x = this.vel.getX(), 	
-				v1y = this.vel.getY(),
-				x1 = this.pos.getX(),
-				y1 = this.pos.getY(),
-				v2x = that.getVel().getX(),
-				v2y = that.getVel().getY(), 
-				x2 = that.getPos().getX(),
-				y2 = that.getPos().getY();
+	public void calculateCollision(BodyP that, BodyP oldthis, BodyP oldthat) {
+		double 	v1x = oldthis.getVel().getX(), 	
+				v1y = oldthis.getVel().getY(),
+				x1 = oldthis.getPos().getX(),
+				y1 = oldthis.getPos().getY(),
+				v2x = oldthat.getVel().getX(),
+				v2y = oldthat.getVel().getY(), 
+				x2 = oldthat.getPos().getX(),
+				y2 = oldthat.getPos().getY();
 		
 		double v1fx = v2x * Math.pow(x2 - x1, 2);
 		v1fx += v2y * (x2 - x1) * (y2 - y1);
