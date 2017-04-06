@@ -11,6 +11,8 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.cli.*;
@@ -40,11 +42,12 @@ public class NBodyParallel implements Observer {
 	private Vector<BodyP> newbodies;
 	private static int dimension = 600;
 	private Semaphore[][] semaphores = null;
+	private CyclicBarrier cyclicBarrier;
 	private long barrierSec = 0, barrierNano = 0;
 	private int numCollisions = 0;
 	private static int seed;
 	private static boolean hasSeed = false;
-	private static boolean gui = false;
+	private static boolean gui = false, cb = false;
 
 	
 	public NBodyParallel(int numBodies, int bodyRadius, int numWorkers, int barrierStages) {
@@ -100,11 +103,16 @@ public class NBodyParallel implements Observer {
 
 		Thread workers[] = new Thread[numWorkers];
 		// Initialize the semaphores
-		model.semaphores = new Semaphore[barrierStages][numWorkers];
-		for (int i = 0; i < barrierStages; ++i) {
-			for (int j = 0; j < numWorkers; ++j) {
-				model.semaphores[i][j] = new Semaphore(0);
+		if (!cb) {
+			model.semaphores = new Semaphore[barrierStages][numWorkers];
+			for (int i = 0; i < barrierStages; ++i) {
+				for (int j = 0; j < numWorkers; ++j) {
+					model.semaphores[i][j] = new Semaphore(0);
+				}
 			}
+		}
+		else {
+			model.cyclicBarrier = new CyclicBarrier(numWorkers);
 		}
 		
 		// Begin time analysis
@@ -298,11 +306,25 @@ public class NBodyParallel implements Observer {
 			oldbodies.addAll(newbodies);
 		}
 		
-		// cyclic barrier class as alternative
+		/**
+		 * Used to block threads until all threads have reached the same point.
+		 * Uses a custom dissemination barrier unless the -cb flag is added as an 
+		 * argument, in which case Java's CyclicBarrier class is used instead.
+		 */
 		private void barrier() {
 			Instant start = null, end;
 			if (id == 0) start = Instant.now();
-			dissemBarrier(id, semaphores, barrierStages, numWorkers);
+			
+			if (!cb) {
+				dissemBarrier(id, semaphores, barrierStages, numWorkers);
+			}
+			else {
+				try {
+					cyclicBarrier.await();
+				} catch (InterruptedException | BrokenBarrierException e) {
+					e.printStackTrace();
+				}
+			}
 			
 			if (id == 0) {
 				end = Instant.now();
@@ -348,6 +370,10 @@ public class NBodyParallel implements Observer {
 		draw();
 	}
 	
+	/**
+	 * Parses the arguments and sets respective flags appropriately.
+	 * @param args
+	 */
 	private static void checkInput(String[] args) {
 		if (args.length < 4){
 			System.out.println("NBodySequential numWorkers numBodies bodyRadius numSteps [-g] [-s x] [-dt x] [-d x]");
@@ -359,6 +385,7 @@ public class NBodyParallel implements Observer {
         ops.addOption("s", "seed", true, "Set a seed for the random bodies");
         ops.addOption("d", "dimension", true, "Specify a window size");
         ops.addOption("dt", "timedelta", true, "Specify a time delta");
+        ops.addOption("cb", "CyclicBarrier", false, "Use CyclicBarrier instead of dissemination");
         
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
@@ -381,6 +408,9 @@ public class NBodyParallel implements Observer {
         }
         if (cmd.hasOption("dt")){
         	DT = Double.parseDouble(cmd.getOptionValue("dt"));
-        }        
+        }      
+        if (cmd.hasOption("cb")){
+        	cb = true;
+        } 
 	}
 }
