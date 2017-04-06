@@ -117,7 +117,7 @@ public class Body {
 		v2fy += v2y * Math.pow(x2 - x1, 2);
 		v2fy /= Math.pow(x2 - x1,  2) + Math.pow(y2 - y1, 2);
 		
-		this.setVel(v1fx,  v1fy);
+		this.setVel(v1fx, v1fy);
 		that.setVel(v2fx, v2fy);
 	}
 

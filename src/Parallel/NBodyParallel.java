@@ -30,9 +30,9 @@ import org.apache.commons.cli.*;
  *
  */
 public class NBodyParallel implements Observer {
-	private static int barrierStages, numWorkers;
-	public static final double G = 6.67 * Math.pow(10, -11);
-	public static final int MASS = 10000000;
+	private int barrierStages, numWorkers;
+	public final double G = 6.67 * Math.pow(10, -11);
+	public final int MASS = 10000000;
 	public static double DT = .5;
 	private int numBodies;
 	private int bodyRadius;
@@ -40,8 +40,8 @@ public class NBodyParallel implements Observer {
 	private Vector<BodyP> newbodies;
 	private static int dimension = 600;
 	private Semaphore[][] semaphores = null;
-	private static long barrierSec = 0, barrierNano = 0;
-	private static int numCollisions = 0;
+	private long barrierSec = 0, barrierNano = 0;
+	private int numCollisions = 0;
 	private static int seed;
 	private static boolean hasSeed = false;
 	private static boolean gui = false;
@@ -82,7 +82,7 @@ public class NBodyParallel implements Observer {
 	}
 	
 	public static void main (String [] arg){
-		String [] args = {"6", "100", "10", "1000", "-g", "-s", "20"};
+		String [] args = {"6", "50", "10", "1000", "-g", "-s", "20"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -114,7 +114,7 @@ public class NBodyParallel implements Observer {
 		int i;
 		for (i = 0; i < numWorkers; ++i) {
 			// Create the thread and start running it
-			Worker worker = new Worker(i, numSteps, model.oldbodies, model.newbodies, model.semaphores, numBodies);
+			Worker worker = model.new Worker(i, numSteps, model.oldbodies, model.newbodies, model.semaphores, numBodies);
 			worker.addObserver(model);
 			workers[i] = new Thread(worker);
 			workers[i].start();
@@ -144,11 +144,11 @@ public class NBodyParallel implements Observer {
 			if (!exists) {
 				bw.write("Runtime, TotalTimeInBarrier\n");
 			}
-			Double nanos = ((double)barrierNano/1000000000);
+			Double nanos = ((double)model.barrierNano/1000000000);
 			String runtime = Duration.between(start, end).toString();
-			bw.write(runtime.substring(2, runtime.length()-1) + "," + barrierSec + "." + nanos.toString().substring(2) );
+			bw.write(runtime.substring(2, runtime.length()-1) + "," + model.barrierSec + "." + nanos.toString().substring(2) );
 			System.out.println("Computation time: " + runtime.substring(2, runtime.length()-1) + " seconds");
-			System.out.println("Number of collisions: " + numCollisions);
+			System.out.println("Number of collisions: " + model.numCollisions);
 			bw.newLine();
 			bw.flush();
 			bw.close();
@@ -176,18 +176,12 @@ public class NBodyParallel implements Observer {
 	 * @author Aaron Woodward & Addison Kaufmann
 	 *
 	 */
-	private static class Worker extends Observable implements Runnable {
-		private int id, numSteps, numBodies;
-		private Vector<BodyP> oldbodies, newbodies;
-		private Semaphore[][] semaphores;
+	public class Worker extends Observable implements Runnable {
+		private int id, numSteps;
 		
 		public Worker(int id, int numSteps, Vector<BodyP> oldbodies, Vector<BodyP> newbodies, Semaphore[][] semaphores, int numBodies) {
 			this.id = id;
 			this.numSteps = numSteps;
-			this.oldbodies = oldbodies;
-			this.newbodies = newbodies;
-			this.semaphores = semaphores;
-			this.numBodies = numBodies;
 		}
 
 		public void run() {
@@ -218,7 +212,7 @@ public class NBodyParallel implements Observer {
 					
 				barrier();
 
-				if (id == 0){
+				if (id == 0 && gui){
 					this.setChanged();
 					this.notifyObservers(); // Redraw
 				}
@@ -289,10 +283,10 @@ public class NBodyParallel implements Observer {
 		/**
 		 * Checks for collisions and updates the velocities of any collided bodies.
 		 */
-		public void adjustCollisions(){
-			for (int i = id; i < numBodies-1; i+=numWorkers){
+		public void adjustCollisions() {
+			for (int i = id; i < numBodies-1; i+=numWorkers) {
 				for (int j = i + 1 ; j < numBodies; j++){
-					if (oldbodies.get(i).collidedWith(oldbodies.get(j))){
+					if (oldbodies.get(i).collidedWith(oldbodies.get(j))) {
 						numCollisions++;
 						newbodies.get(i).calculateCollision(newbodies.get(j));
 					}
@@ -347,9 +341,7 @@ public class NBodyParallel implements Observer {
 	}
 
 	public void update(Observable o, Object arg) {
-		if (gui){
-			draw();
-		}
+		draw();
 	}
 	
 	private static void checkInput(String[] args) {
