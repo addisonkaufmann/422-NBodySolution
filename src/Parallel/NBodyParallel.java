@@ -41,6 +41,7 @@ public class NBodyParallel implements Observer {
 	private Vector<BodyP> oldbodies;
 	private Vector<BodyP> newbodies;
 	private static int dimension = 600;
+	private BodyP[][] bodies;
 	private Semaphore[][] semaphores = null;
 	private CyclicBarrier cyclicBarrier;
 	private long barrierSec = 0, barrierNano = 0;
@@ -69,23 +70,26 @@ public class NBodyParallel implements Observer {
 		if (hasSeed){
 			randy = new Random(seed);
 		}
-		for (int i = 0; i < numBodies; i++){
-			BodyP b = null;
-			if (hasSeed){
-				b = new BodyP(dimension/2, bodyRadius, numWorkers, randy);
-			} else {
-				b = new BodyP(dimension/2, bodyRadius, numWorkers);
+
+		
+		bodies = new BodyP[numWorkers][numBodies];
+		for (int i = 0; i < numWorkers; i++) {
+			for (int j = 0; j < numBodies; j++) {
+				if (hasSeed){
+					bodies[i][j] = new BodyP(dimension/2, bodyRadius, randy);
+				} else {
+					bodies[i][j]  = new BodyP(dimension/2, bodyRadius);
+				}
 			}
-			oldbodies.add(b);
-			newbodies.add(b);
 		}
+		
 		if (gui){
 			draw();
 		}
 	}
 	
 	public static void main (String [] arg){
-		String [] args = {"6", "50", "10", "1000", "-g", "-s", "20"};
+		String [] args = {"2", "50", "10", "1000", "-g", "-s", "20"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
@@ -210,10 +214,10 @@ public class NBodyParallel implements Observer {
 				barrier();
 				
 				if (id == 0) {
-					adjustCollisions();
+					//adjustCollisions();
 				}
 					
-				barrier();
+				//barrier();
 
 				if (id == 0 && gui){
 					this.setChanged();
@@ -234,14 +238,14 @@ public class NBodyParallel implements Observer {
 			Point2D force1, force2;
 			
 			for (int i = id; i < numBodies; i+=numWorkers){
-				body1 = oldbodies.get(i);
 				for (int j = i+1; j < numBodies; j++) {
-					body2 = oldbodies.get(j);
+					body1 = bodies[id][i];
+					body2 = bodies[id][j];
 					pos1 = body1.getPos();
 					pos2 = body2.getPos();
 					
-					force1 = body1.getForce(id);
-					force2 = body2.getForce(id);
+					force1 = body1.getForce();
+					force2 = body2.getForce();
 					
 					dist = pos1.distance(pos2);
 					if (dist == 0) {
@@ -252,8 +256,8 @@ public class NBodyParallel implements Observer {
 					dir = new Point2D.Double(pos2.getX() - pos1.getX(), pos2.getY() - pos1.getY());
 					newforce = new Point2D.Double((mag*dir.getX())/dist, (mag*dir.getY())/dist);
 					
-					newbodies.get(i).setForce(id, force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
-					newbodies.get(j).setForce(id, force2.getX() - newforce.getX(), force2.getY() - newforce.getY());	
+					bodies[id][i].setForce(force1.getX() + newforce.getX(), force1.getY() + newforce.getY());
+					bodies[id][j].setForce(force2.getX() - newforce.getX(), force2.getY() - newforce.getY());	
 				}
 			}	
 		}
@@ -264,20 +268,27 @@ public class NBodyParallel implements Observer {
 		 */
 		public void moveBodies(){
 			Point2D dv, dp, force, velocity, position;
-			BodyP body;
-			
+			BodyP body = null;
+			force = new Point2D.Double();
+			force.setLocation(0.0, 0.0);
 			for (int i = id; i < numBodies; i+=numWorkers){
-				body = newbodies.get(i);
-				force = body.getForceSum();
+				for (int k = 0; k < numWorkers; k++) {
+					body = bodies[k][i];
+					Point2D bForce = body.getForce();
+					force.setLocation(force.getX() + bForce.getX(), force.getY() + bForce.getY());
+					body.setForce(0.0, 0.0);
+				}
 				velocity = body.getVel();
 				position = body.getPos();
 				dv = new Point2D.Double(force.getX()/MASS * DT, force.getY()/MASS * DT);
 				dp = new Point2D.Double(   (velocity.getX() + dv.getX()/2) * DT, 
 											(velocity.getY() + dv.getY()/2) * DT);
 				
-				body.setVel(velocity.getX() + dv.getX(), velocity.getY() + dv.getY());
-				body.setPos(position.getX() + dp.getX(), position.getY() + dp.getY());
-				body.setForce(id, 0.0,  0.0);
+				for (int k = 0; k < numWorkers; k++) {
+					bodies[k][i].setVel(velocity.getX() + dv.getX(), velocity.getY() + dv.getY());
+					bodies[k][i].setPos(position.getX() + dp.getX(), position.getY() + dp.getY());
+					bodies[k][i].setForce( 0.0,  0.0);
+				}
 			}
 		}
 		
@@ -350,9 +361,9 @@ public class NBodyParallel implements Observer {
 	
 	public void draw() {
 		StdDraw.clear();
-		for (BodyP body : newbodies) {
-			Point2D pos = body.getPos();
-			StdDraw.filledCircle(pos.getX(), pos.getY(), body.getRadius());
+		for (int i = 0; i < numBodies; ++i) {
+			Point2D pos = bodies[0][i].getPos();
+			StdDraw.filledCircle(pos.getX(), pos.getY(), bodies[0][i].getRadius());
 		}
 		StdDraw.show();
 	}

@@ -2,7 +2,8 @@ package Parallel;
 
 import java.awt.geom.Point2D;
 import java.util.Random;
-import java.util.Vector;
+
+import Parallel.BodyP;
 
 /**
  * This class represents a perfectly circular body that have properties such
@@ -11,11 +12,10 @@ import java.util.Vector;
  *
  */
 public class BodyP {
-	private Point2D pos, vel;
-	private Vector<Point2D> force;
+	private Point2D pos, vel, force;
 	private double radius;
 	
-	public BodyP(int bounds, int radius, int numWorkers){
+	public BodyP(int bounds, int radius){
 		int maxpos = bounds, minpos = -1*bounds;
 		int minvel = -5, maxvel = 5;
 		Random randy = new Random();
@@ -25,14 +25,11 @@ public class BodyP {
 
 		//this.vel = new Point2D.Double(0.0, 0.0);
 
-		this.force = new Vector<Point2D>();
-		for (int i = 0; i < numWorkers; i++) {
-			this.force.add(new Point2D.Double(0.0, 0.0));
-		}
+		this.force = new Point2D.Double(0.0, 0.0);
 		this.radius = radius;
 	}
 	
-	public BodyP(int bounds, int radius, int numWorkers, Random randy){
+	public BodyP(int bounds, int radius, Random randy){
 		int maxpos = bounds, minpos = -1*bounds;
 		int minvel = -5, maxvel = 5;
 
@@ -41,10 +38,14 @@ public class BodyP {
 
 		//this.vel = new Point2D.Double(0.0, 0.0);
 
-		this.force = new Vector<Point2D>();
-		for (int i = 0; i < numWorkers; i++) {
-			this.force.add(new Point2D.Double(0.0, 0.0));
-		}
+		this.force = new Point2D.Double(0.0, 0.0);
+		this.radius = radius;
+	}
+	
+	public BodyP(Point2D pos, Point2D vel, Point2D force, double radius) {
+		this.pos = pos;
+		this.vel = vel;
+		this.force = force;
 		this.radius = radius;
 	}
 
@@ -64,23 +65,13 @@ public class BodyP {
 		this.vel.setLocation(x, y);
 		
 	}
-	
-	public Point2D getForce(int i) {
-		return force.get(i);
+
+	public Point2D getForce() {
+		return force;
 	}
 
-	public Point2D getForceSum() {
-		double x = 0.0, y = 0.0;
-		for (Point2D p : force) {
-			x += p.getX();
-			y += p.getY();
-			p.setLocation(0.0, 0.0);
-		}
-		return new Point2D.Double(x,y);
-	}
-
-	public void setForce(int i, double x, double y) {
-		this.force.get(i).setLocation(x, y);
+	public void setForce(double x, double y) {
+		this.force.setLocation(x, y);
 	}
 
 	public double getRadius() {
@@ -129,7 +120,7 @@ public class BodyP {
 		v2fy += v2y * Math.pow(x2 - x1, 2);
 		v2fy /= Math.pow(x2 - x1,  2) + Math.pow(y2 - y1, 2);
 		
-		this.setVel(v1fx,  v1fy);
+		this.setVel(v1fx, v1fy);
 		that.setVel(v2fx, v2fy);
 	}
 
