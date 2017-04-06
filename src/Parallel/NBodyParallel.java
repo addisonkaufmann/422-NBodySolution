@@ -198,20 +198,13 @@ public class NBodyParallel implements Observer {
 				
 				barrier();
 				
-				if (id == 0) {
-					oldbodies.clear();
-					oldbodies.addAll(newbodies);
-				}
-				
-				barrier();
-				
 				moveBodies();
 				
 				barrier();
 				
 				if (id == 0) {
-					newbodies.clear();
-					newbodies.addAll(oldbodies);
+					oldbodies.clear();
+					oldbodies.addAll(newbodies);
 				}
 				
 				barrier();
@@ -243,7 +236,6 @@ public class NBodyParallel implements Observer {
 			for (int i = id; i < numBodies; i+=numWorkers){
 				body1 = oldbodies.get(i);
 				for (int j = i+1; j < numBodies; j++) {
-					if (j >= oldbodies.size()) { System.out.println("OH NO!" + j + ">=" + oldbodies.size()); }
 					body2 = oldbodies.get(j);
 					pos1 = body1.getPos();
 					pos2 = body2.getPos();
@@ -275,8 +267,7 @@ public class NBodyParallel implements Observer {
 			BodyP body;
 			
 			for (int i = id; i < numBodies; i+=numWorkers){
-				if (i >= oldbodies.size()) { System.out.println("OH NO!" + i + ">=" + oldbodies.size()); }
-				body = oldbodies.get(i);
+				body = newbodies.get(i);
 				force = body.getForceSum();
 				velocity = body.getVel();
 				position = body.getPos();
