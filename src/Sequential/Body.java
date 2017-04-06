@@ -2,6 +2,8 @@ package Sequential;
 import java.awt.geom.Point2D;
 import java.util.Random;
 
+import Parallel.BodyP;
+
 /**
  * This class represents a perfectly circular body that have properties such
  * as a position, velocity, force, mass, and diameter.
@@ -83,15 +85,15 @@ public class Body {
 		return Math.abs(this.pos.distance(that.getPos())) <= radius*2;
 	}
 
-	public void calculateCollision(Body that) {
-		double 	v1x = this.vel.getX(), 	
-				v1y = this.vel.getY(),
-				x1 = this.pos.getX(),
-				y1 = this.pos.getY(),
-				v2x = that.getVel().getX(),
-				v2y = that.getVel().getY(), 
-				x2 = that.getPos().getX(),
-				y2 = that.getPos().getY();
+	public void calculateCollision(Body that, Body oldthis, Body oldthat) {
+		double 	v1x = oldthis.getVel().getX(), 	
+				v1y = oldthis.getVel().getY(),
+				x1 = oldthis.getPos().getX(),
+				y1 = oldthis.getPos().getY(),
+				v2x = oldthat.getVel().getX(),
+				v2y = oldthat.getVel().getY(), 
+				x2 = oldthat.getPos().getX(),
+				y2 = oldthat.getPos().getY();
 		
 		double v1fx = v2x * Math.pow(x2 - x1, 2);
 		v1fx += v2y * (x2 - x1) * (y2 - y1);
