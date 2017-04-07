@@ -84,8 +84,8 @@ public class NBodyParallel implements Observer {
 		}
 	}
 	
-	public static void main (String [] arg){
-		String [] args = {"6", "50", "10", "1000", "-g", "-s", "20"};
+	public static void main (String [] args){
+//		String [] args = {"6", "50", "10", "1000", "-g", "-s", "20"};
 		if (args.length < 4){
 			System.out.println("NBodyParallel numWorkers numBodies bodyRadius numSteps");
 			System.exit(1);
