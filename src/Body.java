@@ -10,6 +10,7 @@ import java.util.Random;
  *
  */
 public class Body {
+	
 	private Point2D pos, vel, force;
 	private double radius;
 	

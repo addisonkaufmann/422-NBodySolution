@@ -494,6 +494,7 @@ public final class StdDraw implements ActionListener, MouseListener, MouseMotion
      *  The color red.
      */
     public static final Color RED = Color.RED;
+    
 
     /**
      *  The color white.

@@ -11,6 +11,7 @@ import java.util.Vector;
  *
  */
 public class BodyP {
+	
 	private Point2D pos, vel;
 	private Vector<Point2D> force;
 	private double radius;
